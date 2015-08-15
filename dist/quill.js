@@ -6510,7 +6510,7 @@ Format = (function() {
       tag: 'IMG',
       attribute: 'src'
     },
-    video: {
+    media: {
       type: Format.types.EMBED,
       tag: 'IFRAME',
       attribute: 'src'
@@ -6569,7 +6569,6 @@ Format = (function() {
       } else if (this.isType(Format.types.LINE)) {
         node = dom(node).switchTag(this.config.tag).get();
       } else {
-        dom(node).wrap(formatNode);
         node = formatNode;
       }
     }
@@ -6677,7 +6676,6 @@ Format = (function() {
         }
         node = dom(node).switchTag(dom.DEFAULT_BLOCK_TAG).get();
       } else if (this.isType(Format.types.EMBED)) {
-        console.log(node, 'ok');
         dom(node).remove();
         return void 0;
       } else {
@@ -7578,7 +7576,7 @@ _dereq_('./modules/authorship');
 
 _dereq_('./modules/image-tooltip');
 
-_dereq_('./modules/video-tooltip');
+_dereq_('./modules/media-tooltip');
 
 _dereq_('./modules/keyboard');
 
@@ -7597,7 +7595,7 @@ _dereq_('./modules/undo-manager');
 module.exports = _dereq_('./quill');
 
 
-},{"./modules/authorship":21,"./modules/image-tooltip":22,"./modules/keyboard":23,"./modules/link-tooltip":24,"./modules/multi-cursor":25,"./modules/paste-manager":26,"./modules/toolbar":27,"./modules/tooltip":28,"./modules/undo-manager":29,"./modules/video-tooltip":30,"./quill":31}],16:[function(_dereq_,module,exports){
+},{"./modules/authorship":21,"./modules/image-tooltip":22,"./modules/keyboard":23,"./modules/link-tooltip":24,"./modules/media-tooltip":25,"./modules/multi-cursor":26,"./modules/paste-manager":27,"./modules/toolbar":28,"./modules/tooltip":29,"./modules/undo-manager":30,"./quill":31}],16:[function(_dereq_,module,exports){
 var ColorPicker, Picker, dom,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -8238,7 +8236,6 @@ dom = _.extend(dom, {
     'H6': 'H6',
     'HEADER': 'HEADER',
     'HGROUP': 'HGROUP',
-    'IFRAME': 'IFRAME',
     'LI': 'LI',
     'OL': 'OL',
     'OUTPUT': 'OUTPUT',
@@ -8261,7 +8258,8 @@ dom = _.extend(dom, {
   },
   LINE_TAGS: {
     'DIV': 'DIV',
-    'LI': 'LI'
+    'LI': 'LI',
+    'IFRAME': 'IFRAME'
   },
   LIST_TAGS: {
     'OL': 'OL',
@@ -8276,7 +8274,6 @@ dom = _.extend(dom, {
     'EMBED': 'EMBED',
     'HR': 'HR',
     'IMG': 'IMG',
-    'IFRAME': 'IFRAME',
     'INPUT': 'INPUT',
     'KEYGEN': 'KEYGEN',
     'LINK': 'LINK',
@@ -8788,7 +8785,7 @@ Quill.registerModule('image-tooltip', ImageTooltip);
 module.exports = ImageTooltip;
 
 
-},{"../quill":31,"./tooltip":28}],23:[function(_dereq_,module,exports){
+},{"../quill":31,"./tooltip":29}],23:[function(_dereq_,module,exports){
 var Delta, Keyboard, Quill, _, dom;
 
 Quill = _dereq_('../quill');
@@ -9206,7 +9203,118 @@ Quill.registerModule('link-tooltip', LinkTooltip);
 module.exports = LinkTooltip;
 
 
-},{"../quill":31,"./tooltip":28}],25:[function(_dereq_,module,exports){
+},{"../quill":31,"./tooltip":29}],25:[function(_dereq_,module,exports){
+var Delta, MediaTooltip, Quill, Range, Tooltip, _, dom,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
+
+Quill = _dereq_('../quill');
+
+Tooltip = _dereq_('./tooltip');
+
+_ = Quill.require('lodash');
+
+dom = Quill.require('dom');
+
+Delta = Quill.require('delta');
+
+Range = Quill.require('range');
+
+MediaTooltip = (function(superClass) {
+  extend(MediaTooltip, superClass);
+
+  MediaTooltip.DEFAULTS = {
+    template: '<input class="input" type="textbox"> <div class="preview"> <span>Preview</span> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="insert">Insert</a>'
+  };
+
+  function MediaTooltip(quill, options) {
+    this.quill = quill;
+    this.options = options;
+    this.options = _.defaults(this.options, Tooltip.DEFAULTS);
+    MediaTooltip.__super__.constructor.call(this, this.quill, this.options);
+    this.preview = this.container.querySelector('.preview');
+    this.textbox = this.container.querySelector('.input');
+    dom(this.container).addClass('ql-media-tooltip');
+    this.initListeners();
+  }
+
+  MediaTooltip.prototype.initListeners = function() {
+    dom(this.container.querySelector('.insert')).on('click', _.bind(this.insertVideo, this));
+    dom(this.container.querySelector('.cancel')).on('click', _.bind(this.hide, this));
+    dom(this.textbox).on('input', _.bind(this._preview, this));
+    this.initTextbox(this.textbox, this.insertVideo, this.hide);
+    return this.quill.onModuleLoad('toolbar', (function(_this) {
+      return function(toolbar) {
+        return toolbar.initFormat('media', _.bind(_this._onToolbar, _this));
+      };
+    })(this));
+  };
+
+  MediaTooltip.prototype.insertVideo = function() {
+    var index, url;
+    url = this._normalizeURL(this.textbox.value);
+    if (this.range == null) {
+      this.range = new Range(0, 0);
+    }
+    if (this.range) {
+      this.preview.innerHTML = '<span>Preview</span>';
+      this.textbox.value = '';
+      index = this.range.end;
+      this.quill.insertEmbed(index, 'media', url, 'user');
+      this.quill.setSelection(index + 1, index + 1);
+    }
+    return this.hide();
+  };
+
+  MediaTooltip.prototype._onToolbar = function(range, value) {
+    if (value) {
+      if (!this.textbox.value) {
+        this.textbox.value = 'http://';
+      }
+      this.show();
+      this.textbox.focus();
+      return _.defer((function(_this) {
+        return function() {
+          return _this.textbox.setSelectionRange(_this.textbox.value.length, _this.textbox.value.length);
+        };
+      })(this));
+    } else {
+      return this.quill.deleteText(range, 'user');
+    }
+  };
+
+  MediaTooltip.prototype._preview = function() {
+    var iframe;
+    if (!this._matchVideoURL(this.textbox.value)) {
+      return;
+    }
+    if (this.preview.firstChild.tagName === 'IFRAME') {
+      return this.preview.firstChild.setAttribute('src', this.textbox.value);
+    } else {
+      iframe = document.createElement('iframe');
+      iframe.setAttribute('src', this.textbox.value);
+      return this.preview.replaceChild(iframe, this.preview.firstChild);
+    }
+  };
+
+  MediaTooltip.prototype._matchVideoURL = function(url) {
+    return true;
+  };
+
+  MediaTooltip.prototype._normalizeURL = function(url) {
+    return url;
+  };
+
+  return MediaTooltip;
+
+})(Tooltip);
+
+Quill.registerModule('media-tooltip', MediaTooltip);
+
+module.exports = MediaTooltip;
+
+
+},{"../quill":31,"./tooltip":29}],26:[function(_dereq_,module,exports){
 var EventEmitter2, MultiCursor, Quill, _, dom,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -9382,7 +9490,7 @@ Quill.registerModule('multi-cursor', MultiCursor);
 module.exports = MultiCursor;
 
 
-},{"../quill":31,"eventemitter2":2}],26:[function(_dereq_,module,exports){
+},{"../quill":31,"eventemitter2":2}],27:[function(_dereq_,module,exports){
 var Delta, Document, PasteManager, Quill, _, dom,
   bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
@@ -9469,7 +9577,7 @@ Quill.registerModule('paste-manager', PasteManager);
 module.exports = PasteManager;
 
 
-},{"../core/document":8,"../quill":31}],27:[function(_dereq_,module,exports){
+},{"../core/document":8,"../quill":31}],28:[function(_dereq_,module,exports){
 var Quill, Toolbar, _, dom;
 
 Quill = _dereq_('../quill');
@@ -9504,11 +9612,13 @@ Toolbar = (function() {
       'link': 'link',
       'list': 'list',
       'strike': 'strike',
-      'underline': 'underline'
+      'underline': 'underline',
+      'media': 'media'
     },
     TOOLTIP: {
       'image': 'image',
-      'link': 'link'
+      'link': 'link',
+      'media': 'media'
     }
   };
 
@@ -9754,7 +9864,7 @@ Quill.registerModule('toolbar', Toolbar);
 module.exports = Toolbar;
 
 
-},{"../quill":31}],28:[function(_dereq_,module,exports){
+},{"../quill":31}],29:[function(_dereq_,module,exports){
 var Quill, Tooltip, _, dom;
 
 Quill = _dereq_('../quill');
@@ -9853,7 +9963,7 @@ Quill.registerModule('tooltip', Tooltip);
 module.exports = Tooltip;
 
 
-},{"../quill":31}],29:[function(_dereq_,module,exports){
+},{"../quill":31}],30:[function(_dereq_,module,exports){
 var Delta, Quill, UndoManager, _;
 
 Quill = _dereq_('../quill');
@@ -10036,118 +10146,7 @@ Quill.registerModule('undo-manager', UndoManager);
 module.exports = UndoManager;
 
 
-},{"../quill":31}],30:[function(_dereq_,module,exports){
-var Delta, Quill, Range, Tooltip, VideoTooltip, _, dom,
-  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  hasProp = {}.hasOwnProperty;
-
-Quill = _dereq_('../quill');
-
-Tooltip = _dereq_('./tooltip');
-
-_ = Quill.require('lodash');
-
-dom = Quill.require('dom');
-
-Delta = Quill.require('delta');
-
-Range = Quill.require('range');
-
-VideoTooltip = (function(superClass) {
-  extend(VideoTooltip, superClass);
-
-  VideoTooltip.DEFAULTS = {
-    template: '<input class="input" type="textbox"> <div class="preview"> <span>Preview</span> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="insert">Insert</a>'
-  };
-
-  function VideoTooltip(quill, options) {
-    this.quill = quill;
-    this.options = options;
-    this.options = _.defaults(this.options, Tooltip.DEFAULTS);
-    VideoTooltip.__super__.constructor.call(this, this.quill, this.options);
-    this.preview = this.container.querySelector('.preview');
-    this.textbox = this.container.querySelector('.input');
-    dom(this.container).addClass('ql-video-tooltip');
-    this.initListeners();
-  }
-
-  VideoTooltip.prototype.initListeners = function() {
-    dom(this.container.querySelector('.insert')).on('click', _.bind(this.insertVideo, this));
-    dom(this.container.querySelector('.cancel')).on('click', _.bind(this.hide, this));
-    dom(this.textbox).on('input', _.bind(this._preview, this));
-    this.initTextbox(this.textbox, this.insertVideo, this.hide);
-    return this.quill.onModuleLoad('toolbar', (function(_this) {
-      return function(toolbar) {
-        return toolbar.initFormat('video', _.bind(_this._onToolbar, _this));
-      };
-    })(this));
-  };
-
-  VideoTooltip.prototype.insertVideo = function() {
-    var index, url;
-    url = this._normalizeURL(this.textbox.value);
-    if (this.range == null) {
-      this.range = new Range(0, 0);
-    }
-    if (this.range) {
-      this.preview.innerHTML = '<span>Preview</span>';
-      this.textbox.value = '';
-      index = this.range.end;
-      this.quill.insertEmbed(index, 'video', url, 'user');
-      this.quill.setSelection(index + 1, index + 1);
-    }
-    return this.hide();
-  };
-
-  VideoTooltip.prototype._onToolbar = function(range, value) {
-    if (value) {
-      if (!this.textbox.value) {
-        this.textbox.value = 'http://';
-      }
-      this.show();
-      this.textbox.focus();
-      return _.defer((function(_this) {
-        return function() {
-          return _this.textbox.setSelectionRange(_this.textbox.value.length, _this.textbox.value.length);
-        };
-      })(this));
-    } else {
-      return this.quill.deleteText(range, 'user');
-    }
-  };
-
-  VideoTooltip.prototype._preview = function() {
-    var img;
-    if (!this._matchVideoURL(this.textbox.value)) {
-      return;
-    }
-    if (this.preview.firstChild.tagName === 'IMG') {
-      return this.preview.firstChild.setAttribute('src', this.textbox.value);
-    } else {
-      img = document.createElement('img');
-      img.setAttribute('src', this.textbox.value);
-      return this.preview.replaceChild(img, this.preview.firstChild);
-    }
-  };
-
-  VideoTooltip.prototype._matchVideoURL = function(url) {
-    return true;
-  };
-
-  VideoTooltip.prototype._normalizeURL = function(url) {
-    return url;
-  };
-
-  return VideoTooltip;
-
-})(Tooltip);
-
-Quill.registerModule('video-tooltip', VideoTooltip);
-
-module.exports = VideoTooltip;
-
-
-},{"../quill":31,"./tooltip":28}],31:[function(_dereq_,module,exports){
+},{"../quill":31}],31:[function(_dereq_,module,exports){
 var Delta, Document, Editor, EventEmitter2, Format, Normalizer, Quill, Range, _, dom, pkg,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty,
@@ -10185,7 +10184,7 @@ Quill = (function(superClass) {
   Quill.themes = [];
 
   Quill.DEFAULTS = {
-    formats: ['align', 'bold', 'italic', 'strike', 'underline', 'color', 'background', 'font', 'size', 'link', 'image', 'bullet', 'list', 'video'],
+    formats: ['align', 'bold', 'italic', 'strike', 'underline', 'color', 'background', 'font', 'size', 'link', 'image', 'bullet', 'list', 'media'],
     modules: {
       'keyboard': true,
       'paste-manager': true,
@@ -10568,7 +10567,7 @@ module.exports = Quill;
 
 
 },{"../package.json":7,"./core/document":8,"./core/editor":9,"./core/format":10,"./core/normalizer":13,"./lib/dom":17,"./lib/range":20,"./themes/base":33,"./themes/snow":34,"eventemitter2":2,"lodash":1,"rich-text/lib/delta":3}],32:[function(_dereq_,module,exports){
-module.exports = ".ql-image-tooltip{padding:10px;width:300px}.ql-image-tooltip:after{clear:both;content:\"\";display:table}.ql-image-tooltip a{border:1px solid #000;box-sizing:border-box;display:inline-block;float:left;padding:5px;text-align:center;width:50%}.ql-image-tooltip img{bottom:0;left:0;margin:auto;max-height:100%;max-width:100%;position:absolute;right:0;top:0}.ql-image-tooltip .input{box-sizing:border-box;width:100%}.ql-image-tooltip .preview{margin:10px 0;position:relative;border:1px dashed #000;height:200px}.ql-image-tooltip .preview span{display:inline-block;position:absolute;text-align:center;top:40%;width:100%}.ql-link-tooltip{padding:5px 10px}.ql-link-tooltip input.input{width:170px}.ql-link-tooltip a.done,.ql-link-tooltip input.input{display:none}.ql-link-tooltip a.change{margin-right:4px}.ql-link-tooltip.editing a.done,.ql-link-tooltip.editing input.input{display:inline-block}.ql-link-tooltip.editing a.change,.ql-link-tooltip.editing a.remove,.ql-link-tooltip.editing a.url{display:none}.ql-multi-cursor{position:absolute;left:0;top:0;z-index:1000}.ql-multi-cursor .cursor{margin-left:-1px;position:absolute}.ql-multi-cursor .cursor-flag{bottom:100%;position:absolute;white-space:nowrap}.ql-multi-cursor .cursor-name{display:inline-block;color:#fff;padding:2px 8px}.ql-multi-cursor .cursor-caret{height:100%;position:absolute;width:2px}.ql-multi-cursor .cursor.hidden .cursor-flag{display:none}.ql-multi-cursor .cursor.top .cursor-flag{bottom:auto;top:100%}.ql-multi-cursor .cursor.right .cursor-flag{right:-2px}.ql-paste-manager{left:-100000px;position:absolute;top:50%}.ql-toolbar{box-sizing:border-box}.ql-tooltip{background-color:#fff;border:1px solid #000;box-sizing:border-box;position:absolute;top:0;white-space:nowrap;z-index:2000}.ql-tooltip a{cursor:pointer;text-decoration:none}.ql-container{box-sizing:border-box;cursor:text;font-family:Helvetica,Arial,sans-serif;font-size:13px;height:100%;line-height:1.42;margin:0;overflow-x:hidden;overflow-y:auto;padding:12px 15px;position:relative}.ql-editor{box-sizing:border-box;min-height:100%;outline:0;tab-size:4;white-space:pre-wrap}.ql-editor div{margin:0;padding:0}.ql-editor a{text-decoration:underline}.ql-editor b{font-weight:700}.ql-editor i{font-style:italic}.ql-editor s{text-decoration:line-through}.ql-editor u{text-decoration:underline}.ql-editor a,.ql-editor b,.ql-editor i,.ql-editor s,.ql-editor span,.ql-editor u{background-color:inherit}.ql-editor img{max-width:100%}.ql-editor blockquote,.ql-editor ol,.ql-editor ul{margin:0 0 0 2em;padding:0}.ql-editor ol{list-style-type:decimal}.ql-editor ul{list-style-type:disc}.ql-editor.ql-ie-10 br,.ql-editor.ql-ie-9 br{display:none}";
+module.exports = ".ql-image-tooltip{padding:10px;width:300px}.ql-image-tooltip:after{clear:both;content:\"\";display:table}.ql-image-tooltip a{border:1px solid #000;box-sizing:border-box;display:inline-block;float:left;padding:5px;text-align:center;width:50%}.ql-image-tooltip img{bottom:0;left:0;margin:auto;max-height:100%;max-width:100%;position:absolute;right:0;top:0}.ql-image-tooltip .input{box-sizing:border-box;width:100%}.ql-image-tooltip .preview{margin:10px 0;position:relative;border:1px dashed #000;height:200px}.ql-image-tooltip .preview span{display:inline-block;position:absolute;text-align:center;top:40%;width:100%}.ql-link-tooltip{padding:5px 10px}.ql-link-tooltip input.input{width:170px}.ql-link-tooltip a.done,.ql-link-tooltip input.input{display:none}.ql-link-tooltip a.change{margin-right:4px}.ql-link-tooltip.editing a.done,.ql-link-tooltip.editing input.input{display:inline-block}.ql-link-tooltip.editing a.change,.ql-link-tooltip.editing a.remove,.ql-link-tooltip.editing a.url{display:none}.ql-media-tooltip{padding:10px;width:300px}.ql-media-tooltip:after{clear:both;content:\"\";display:table}.ql-media-tooltip a{border:1px solid #000;box-sizing:border-box;display:inline-block;float:left;padding:5px;text-align:center;width:50%}.ql-media-tooltip iframe{bottom:0;left:0;margin:auto;max-height:100%;max-width:100%;position:absolute;right:0;top:0;border:none}.ql-media-tooltip .input{box-sizing:border-box;width:100%}.ql-media-tooltip .preview{margin:10px 0;position:relative;border:1px dashed #000;height:200px}.ql-media-tooltip .preview span{display:inline-block;position:absolute;text-align:center;top:40%;width:100%}.ql-multi-cursor{position:absolute;left:0;top:0;z-index:1000}.ql-multi-cursor .cursor{margin-left:-1px;position:absolute}.ql-multi-cursor .cursor-flag{bottom:100%;position:absolute;white-space:nowrap}.ql-multi-cursor .cursor-name{display:inline-block;color:#fff;padding:2px 8px}.ql-multi-cursor .cursor-caret{height:100%;position:absolute;width:2px}.ql-multi-cursor .cursor.hidden .cursor-flag{display:none}.ql-multi-cursor .cursor.top .cursor-flag{bottom:auto;top:100%}.ql-multi-cursor .cursor.right .cursor-flag{right:-2px}.ql-paste-manager{left:-100000px;position:absolute;top:50%}.ql-toolbar{box-sizing:border-box}.ql-tooltip{background-color:#fff;border:1px solid #000;box-sizing:border-box;position:absolute;top:0;white-space:nowrap;z-index:2000}.ql-tooltip a{cursor:pointer;text-decoration:none}.ql-container{box-sizing:border-box;cursor:text;font-family:Helvetica,Arial,sans-serif;font-size:13px;height:100%;line-height:1.42;margin:0;overflow-x:hidden;overflow-y:auto;padding:12px 15px;position:relative}.ql-editor{box-sizing:border-box;min-height:100%;outline:0;tab-size:4;white-space:pre-wrap}.ql-editor div{margin:0;padding:0}.ql-editor a{text-decoration:underline}.ql-editor b{font-weight:700}.ql-editor i{font-style:italic}.ql-editor s{text-decoration:line-through}.ql-editor u{text-decoration:underline}.ql-editor a,.ql-editor b,.ql-editor i,.ql-editor s,.ql-editor span,.ql-editor u{background-color:inherit}.ql-editor img{max-width:100%}.ql-editor blockquote,.ql-editor ol,.ql-editor ul{margin:0 0 0 2em;padding:0}.ql-editor ol{list-style-type:decimal}.ql-editor ul{list-style-type:disc}.ql-editor iframe{max-width:100%;border:none}.ql-editor.ql-ie-10 br,.ql-editor.ql-ie-9 br{display:none}";
 },{}],33:[function(_dereq_,module,exports){
 var BaseTheme, _, baseStyles, dom;
 

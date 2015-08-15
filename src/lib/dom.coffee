@@ -397,7 +397,6 @@ dom = _.extend(dom,
     'H1', 'H2', 'H3', 'H4', 'H5', 'H6'
     'HEADER'
     'HGROUP'
-    'IFRAME'
     'LI'
     'OL'
     'OUTPUT'
@@ -417,11 +416,13 @@ dom = _.extend(dom,
 
   EMBED_TAGS: {
     'IMG'
+    'IFRAME'
   }
 
   LINE_TAGS: {
     'DIV'
     'LI'
+    'IFRAME'
   }
 
   LIST_TAGS: {

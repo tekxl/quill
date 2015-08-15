@@ -61,7 +61,8 @@ class Format
       tag: 'IMG'
       attribute: 'src'
 
-    video:
+    media:
+      type: Format.types.EMBED
       tag: 'IFRAME'
       attribute: 'src'
 
@@ -105,7 +106,7 @@ class Format
       else if this.isType(Format.types.LINE)
         node = dom(node).switchTag(@config.tag).get()
       else
-        dom(node).wrap(formatNode)
+        # dom(node).wrap(formatNode)
         node = formatNode
     if _.isString(@config.style) or _.isString(@config.attribute) or _.isString(@config.class)
       if _.isString(@config.class)

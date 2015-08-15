@@ -6,7 +6,7 @@ Delta   = Quill.require('delta')
 Range   = Quill.require('range')
 
 
-class VideoTooltip extends Tooltip
+class MediaTooltip extends Tooltip
   @DEFAULTS:
     template:
      '<input class="input" type="textbox">
@@ -21,12 +21,8 @@ class VideoTooltip extends Tooltip
     super(@quill, @options)
     @preview = @container.querySelector('.preview')
     @textbox = @container.querySelector('.input')
-    dom(@container).addClass('ql-video-tooltip')
-    config =
-      tag: 'IFRAME'
-      attribute: 'src'
+    dom(@container).addClass('ql-media-tooltip')
 
-    @quill.addFormat('video', config)
     this.initListeners()
 
   initListeners: ->
@@ -35,7 +31,7 @@ class VideoTooltip extends Tooltip
     dom(@textbox).on('input', _.bind(this._preview, this))
     this.initTextbox(@textbox, this.insertVideo, this.hide)
     @quill.onModuleLoad('toolbar', (toolbar) =>
-      toolbar.initFormat('video', _.bind(this._onToolbar, this))
+      toolbar.initFormat('media', _.bind(this._onToolbar, this))
     )
 
   insertVideo: ->
@@ -45,7 +41,7 @@ class VideoTooltip extends Tooltip
       @preview.innerHTML = '<span>Preview</span>'
       @textbox.value = ''
       index = @range.end
-      @quill.insertEmbed(index, 'video', url, 'user')
+      @quill.insertEmbed(index, 'media', url, 'user')
       @quill.setSelection(index + 1, index + 1)
     this.hide()
 
@@ -62,12 +58,12 @@ class VideoTooltip extends Tooltip
 
   _preview: ->
     return unless this._matchVideoURL(@textbox.value)
-    if @preview.firstChild.tagName == 'IMG'
+    if @preview.firstChild.tagName == 'IFRAME'
       @preview.firstChild.setAttribute('src', @textbox.value)
     else
-      img = document.createElement('img')
-      img.setAttribute('src', @textbox.value)
-      @preview.replaceChild(img, @preview.firstChild)
+      iframe = document.createElement('iframe')
+      iframe.setAttribute('src', @textbox.value)
+      @preview.replaceChild(iframe, @preview.firstChild)
 
   _matchVideoURL: (url) ->
     return true
@@ -79,5 +75,5 @@ class VideoTooltip extends Tooltip
     return url
 
 
-Quill.registerModule('video-tooltip', VideoTooltip)
-module.exports = VideoTooltip
+Quill.registerModule('media-tooltip', MediaTooltip)
+module.exports = MediaTooltip

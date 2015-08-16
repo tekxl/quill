@@ -6569,6 +6569,9 @@ Format = (function() {
       } else if (this.isType(Format.types.LINE)) {
         node = dom(node).switchTag(this.config.tag).get();
       } else {
+        if (node instanceof Node) {
+          dom(node).wrap(formatNode);
+        }
         node = formatNode;
       }
     }

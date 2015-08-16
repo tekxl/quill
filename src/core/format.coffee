@@ -65,7 +65,10 @@ class Format
     media:
       type: Format.types.EMBED
       tag: 'IFRAME'
-      attribute: 'src'
+      add: (node, value) ->
+        node.setAttribute('src', value)
+        node.setAttribute('frameborder', '0')
+        return node
 
     align:
       type: Format.types.LINE

@@ -63,6 +63,7 @@ class MediaTooltip extends Tooltip
     else
       iframe = document.createElement('iframe')
       iframe.setAttribute('src', @textbox.value)
+      iframe.setAttribute('frameborder', '0')
       @preview.replaceChild(iframe, @preview.firstChild)
 
   _matchVideoURL: (url) ->

@@ -49,6 +49,7 @@ class Format
       tag: 'A'
       add: (node, value) ->
         node.setAttribute('href', value)
+        node.setAttribute('target', '_blank')
         return node
       remove: (node) ->
         node.removeAttribute('href')

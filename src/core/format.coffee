@@ -106,7 +106,7 @@ class Format
       else if this.isType(Format.types.LINE)
         node = dom(node).switchTag(@config.tag).get()
       else
-        # dom(node).wrap(formatNode)
+        dom(node).wrap(formatNode) if node instanceof Node
         node = formatNode
     if _.isString(@config.style) or _.isString(@config.attribute) or _.isString(@config.class)
       if _.isString(@config.class)

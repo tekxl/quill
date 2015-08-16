@@ -97,7 +97,6 @@
   position: absolute;
   right: 0;
   top: 0;
-  border: none;
 }
 .ql-media-tooltip .input {
   box-sizing: border-box;
@@ -236,7 +235,6 @@
 }
 .ql-editor iframe {
   max-width: 100%;
-  border: none;
 }
 .ql-editor.ql-ie-9 br,
 .ql-editor.ql-ie-10 br {

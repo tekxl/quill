@@ -16,7 +16,7 @@ class MediaTooltip extends Tooltip
       <a href="javascript:;" class="cancel">Cancel</a>
       <a href="javascript:;" class="insert">Insert</a>'
 
-  @NOEMBED_URL = 'http://noembed.com/embed'
+  @NOEMBED_URL = '//noembed.com/embed'
 
   constructor: (@quill, @options) ->
     @options = _.defaults(@options, Tooltip.DEFAULTS)

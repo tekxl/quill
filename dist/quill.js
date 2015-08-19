@@ -9235,7 +9235,7 @@ MediaTooltip = (function(superClass) {
     template: '<input class="input" type="textbox"> <div class="preview"> <span>Preview</span> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="insert">Insert</a>'
   };
 
-  MediaTooltip.NOEMBED_URL = 'http://noembed.com/embed';
+  MediaTooltip.NOEMBED_URL = '//noembed.com/embed';
 
   function MediaTooltip(quill, options) {
     this.quill = quill;

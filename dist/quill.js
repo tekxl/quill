@@ -9235,6 +9235,8 @@ MediaTooltip = (function(superClass) {
     template: '<input class="input" type="textbox"> <div class="preview"> <span>Preview</span> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="insert">Insert</a>'
   };
 
+  MediaTooltip.NOEMBED_URL = 'http://noembed.com/embed';
+
   function MediaTooltip(quill, options) {
     this.quill = quill;
     this.options = options;
@@ -9243,13 +9245,15 @@ MediaTooltip = (function(superClass) {
     this.preview = this.container.querySelector('.preview');
     this.textbox = this.container.querySelector('.input');
     dom(this.container).addClass('ql-media-tooltip');
+    this.request = new XMLHttpRequest();
+    this.embedUrl = null;
     this.initListeners();
   }
 
   MediaTooltip.prototype.initListeners = function() {
     dom(this.container.querySelector('.insert')).on('click', _.bind(this.insertVideo, this));
     dom(this.container.querySelector('.cancel')).on('click', _.bind(this.hide, this));
-    dom(this.textbox).on('input', _.bind(this._preview, this));
+    dom(this.textbox).on('input', _.bind(this._getOEmbed, this));
     this.initTextbox(this.textbox, this.insertVideo, this.hide);
     return this.quill.onModuleLoad('toolbar', (function(_this) {
       return function(toolbar) {
@@ -9259,8 +9263,10 @@ MediaTooltip = (function(superClass) {
   };
 
   MediaTooltip.prototype.insertVideo = function() {
-    var index, url;
-    url = this._normalizeURL(this.textbox.value);
+    var index;
+    if (!this.embedUrl) {
+      return;
+    }
     if (this.range == null) {
       this.range = new Range(0, 0);
     }
@@ -9268,9 +9274,10 @@ MediaTooltip = (function(superClass) {
       this.preview.innerHTML = '<span>Preview</span>';
       this.textbox.value = '';
       index = this.range.end;
-      this.quill.insertEmbed(index, 'media', url, 'user');
+      this.quill.insertEmbed(index, 'media', this.embedUrl, 'user');
       this.quill.setSelection(index + 1, index + 1);
     }
+    this.embedUrl = null;
     return this.hide();
   };
 
@@ -9293,25 +9300,56 @@ MediaTooltip = (function(superClass) {
 
   MediaTooltip.prototype._preview = function() {
     var iframe;
-    if (!this._matchVideoURL(this.textbox.value)) {
+    if (!this.embedUrl) {
       return;
     }
     if (this.preview.firstChild.tagName === 'IFRAME') {
-      return this.preview.firstChild.setAttribute('src', this.textbox.value);
+      return this.preview.firstChild.setAttribute('src', this.embedUrl);
     } else {
       iframe = document.createElement('iframe');
-      iframe.setAttribute('src', this.textbox.value);
+      iframe.setAttribute('src', this.embedUrl);
       iframe.setAttribute('frameborder', '0');
       return this.preview.replaceChild(iframe, this.preview.firstChild);
     }
   };
 
-  MediaTooltip.prototype._matchVideoURL = function(url) {
-    return true;
+  MediaTooltip.prototype._normalizeURL = function(url) {
+    if (!/^https?:\/\//.test(url)) {
+      url = 'http://' + url;
+    }
+    return url;
   };
 
-  MediaTooltip.prototype._normalizeURL = function(url) {
-    return url;
+  MediaTooltip.prototype._getOEmbed = function() {
+    var url;
+    url = this._normalizeURL(this.textbox.value);
+    url = window.encodeURIComponent(url);
+    this.request.abort();
+    this.request.open('GET', MediaTooltip.NOEMBED_URL + "?url=" + url, true);
+    this.request.onreadystatechange = (function(_this) {
+      return function(aEvt) {
+        var json;
+        if (_this.request.readyState === 4) {
+          if (_this.request.status === 200) {
+            try {
+              json = JSON.parse(_this.request.responseText);
+              _this.embedUrl = _this._getEmbedUrlFromHTML(json.html || '');
+              return _this._preview();
+            } catch (_error) {
+
+            }
+          }
+        }
+      };
+    })(this);
+    return this.request.send(null);
+  };
+
+  MediaTooltip.prototype._getEmbedUrlFromHTML = function(html) {
+    var reg, result;
+    reg = /<iframe.*src="([^"']*)".*>.*<\/iframe>/g;
+    result = reg.exec(html);
+    return result[1];
   };
 
   return MediaTooltip;

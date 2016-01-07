@@ -1,5 +1,6 @@
 Quill   = require('../quill')
 Tooltip = require('./tooltip')
+Microm = require('../../bower_components/microm/dist/microm')
 _       = Quill.require('lodash')
 dom     = Quill.require('dom')
 Delta   = Quill.require('delta')
@@ -9,71 +10,74 @@ Range   = Quill.require('range')
 class RecordTooltip extends Tooltip
   @DEFAULTS:
     template:
-     '<input class="input" type="textbox">
+     '
       <div class="preview">
+        <a class="audio-containers" href="#">
+          event
+        </a>
         <span>Preview</span>
       </div>
       <a href="javascript:;" class="cancel">Cancel</a>
+      <a href="javascript:;" class="play">Play</a>
       <a href="javascript:;" class="insert">Insert</a>'
 
   constructor: (@quill, @options) ->
     @options = _.defaults(@options, Tooltip.DEFAULTS)
     super(@quill, @options)
     @preview = @container.querySelector('.preview')
-    @textbox = @container.querySelector('.input')
+    @audio = @container.querySelector('.audio-containers')
     dom(@container).addClass('ql-record-tooltip')
-
+    #@microm = new Microm
+    unless @microm
+      @microm = new Microm
     this.initListeners()
 
   initListeners: ->
-    dom(@container.querySelector('.insert')).on('click', _.bind(this.insertVideo, this))
+    dom(@container.querySelector('.insert')).on('click', _.bind(this.sendBlob, this))
     dom(@container.querySelector('.cancel')).on('click', _.bind(this.hide, this))
-    dom(@textbox).on('input', _.bind(this._preview, this))
-    this.initTextbox(@textbox, this.insertVideo, this.hide)
+    dom(@audio).on('click', _.bind(this.recordingEvent, this))
+    dom(@container.querySelector('.play')).on('click', _.bind(this.play, this))
     @quill.onModuleLoad('toolbar', (toolbar) =>
       toolbar.initFormat('record', _.bind(this._onToolbar, this))
     )
 
-  insertVideo: ->
-    url = this._normalizeURL(@textbox.value)
-    @range = new Range(0, 0) unless @range?   # If we lost the selection somehow, just put image at beginning of document
-    if @range
-      @preview.innerHTML = '<span>Preview</span>'
-      @textbox.value = ''
-      index = @range.end
-      @quill.insertEmbed(index, 'media', url, 'user')
-      @quill.setSelection(index + 1, index + 1)
-    this.hide()
+
+  recordingEvent: ->
+    if dom(@audio).hasClass('start-recording')
+      dom(@audio).removeClass('start-recording')
+      @stopRecording()
+    else
+      dom(@audio).addClass('start-recording')
+      @startRecording()
+
+  startRecording: ()->
+    console.log 'recording step 3'
+    @microm.record().then () ->
+      console.log 'recording ...'
+    .catch () ->
+      console.log 'error recording'
+
+
+  stopRecording: ()->
+    @microm.stop().then (voice) ->
+      console.log 'darex',voice
+
+  sendBlob: ()->
+    @microm.getMp3().then (mp3) =>
+      myRecordEvent = new CustomEvent("myEventName",
+      {
+          'data': mp3.blob
+      })
+      console.log myRecordEvent
+      @audio.dispatchEvent(myRecordEvent);
+
+
+  play: ()->
+    @microm.play()
+
 
   _onToolbar: (range, value) ->
-    if value
-      @textbox.value = 'http://' unless @textbox.value
-      this.show()
-      @textbox.focus()
-      _.defer( =>
-        @textbox.setSelectionRange(@textbox.value.length, @textbox.value.length)
-      )
-    else
-      @quill.deleteText(range, 'user')
-
-  _preview: ->
-    return unless this._matchVideoURL(@textbox.value)
-    if @preview.firstChild.tagName == 'IFRAME'
-      @preview.firstChild.setAttribute('src', @textbox.value)
-    else
-      iframe = document.createElement('iframe')
-      iframe.setAttribute('src', @textbox.value)
-      iframe.setAttribute('frameborder', '0')
-      @preview.replaceChild(iframe, @preview.firstChild)
-
-  _matchVideoURL: (url) ->
-    return true
-    # return /^https?:\/\/.+\.(jpe?g|gif|png)$/.test(url)
-
-  _normalizeURL: (url) ->
-    # For now identical to link-tooltip but will change when we allow data uri
-    # url = 'http://' + url unless /^https?:\/\//.test(url)
-    return url
+    this.show()
 
 
 Quill.registerModule('record-tooltip', RecordTooltip)

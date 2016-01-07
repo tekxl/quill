@@ -21,7 +21,7 @@ class RecordTooltip extends Tooltip
     super(@quill, @options)
     @preview = @container.querySelector('.preview')
     @textbox = @container.querySelector('.input')
-    dom(@container).addClass('ql-media-tooltip')
+    dom(@container).addClass('ql-record-tooltip')
 
     this.initListeners()
 
@@ -31,7 +31,7 @@ class RecordTooltip extends Tooltip
     dom(@textbox).on('input', _.bind(this._preview, this))
     this.initTextbox(@textbox, this.insertVideo, this.hide)
     @quill.onModuleLoad('toolbar', (toolbar) =>
-      toolbar.initFormat('media', _.bind(this._onToolbar, this))
+      toolbar.initFormat('record', _.bind(this._onToolbar, this))
     )
 
   insertVideo: ->

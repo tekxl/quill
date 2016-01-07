@@ -19,5 +19,8 @@
     "Gruntfile.coffee",
     "index.js",
     "package.json"
-  ]
+  ],
+  "dependencies": {
+    "microm": "~0.2.4"
+  }
 }

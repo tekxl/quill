@@ -48,6 +48,7 @@ html
           button.ql-format-button.ql-link(title='Link') Link
           button.ql-format-button.ql-image(title='Image') Image
           button.ql-format-button.ql-media(title='Media') Media
+          button.ql-format-button.ql-record(title='Record') Record
           button.ql-format-button.ql-bullet(title='Bullet') Bullet
           button.ql-format-button.ql-list(title='List') List
         #editor-container
@@ -59,7 +60,8 @@ html
           'toolbar': { container: '#formatting-container' },
           'link-tooltip': true,
           'image-tooltip': true,
-          'media-tooltip': true
+          'media-tooltip': true,
+          'record-tooltip':true
         }
       });
       editor.on('selection-change', function(range) {

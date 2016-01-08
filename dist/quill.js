@@ -33735,12 +33735,7 @@ RecordTooltip = (function(superClass) {
   RecordTooltip.prototype.sendBlob = function() {
     return this.microm.getMp3().then((function(_this) {
       return function(mp3) {
-        var myRecordEvent;
-        myRecordEvent = new CustomEvent("myEventName", {
-          'data': mp3.blob
-        });
-        console.log(myRecordEvent);
-        return _this.audio.dispatchEvent(myRecordEvent);
+        return _this.quill.emit("record_data", mp3.blob);
       };
     })(this));
   };

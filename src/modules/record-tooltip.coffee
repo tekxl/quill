@@ -64,13 +64,7 @@ class RecordTooltip extends Tooltip
 
   sendBlob: ()->
     @microm.getMp3().then (mp3) =>
-      myRecordEvent = new CustomEvent("myEventName",
-      {
-          'data': mp3.blob
-      })
-      console.log myRecordEvent
-      @audio.dispatchEvent(myRecordEvent);
-
+      @quill.emit "record_data",mp3.blob
 
   play: ()->
     @microm.play()

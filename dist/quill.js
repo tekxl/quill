@@ -33718,25 +33718,32 @@ RecordTooltip = (function(superClass) {
   };
 
   RecordTooltip.prototype.startRecording = function() {
-    return this.microm.record().then(function() {
-      return this.quill.emit("record_voice", "record start");
-    })["catch"](function() {
-      return this.quill.emit("record_voice", "record error");
-    });
+    return this.microm.record().then((function(_this) {
+      return function() {
+        return _this.quill.emit("record_voice", "record start");
+      };
+    })(this))["catch"]((function(_this) {
+      return function() {
+        return _this.quill.emit("record_voice", "record error");
+      };
+    })(this));
   };
 
   RecordTooltip.prototype.stopRecording = function() {
-    return this.microm.stop().then(function(voice) {
-      return this.quill.emit("record_voice", "record stop");
-    });
+    return this.microm.stop().then((function(_this) {
+      return function(voice) {
+        return _this.quill.emit("record_voice", "record stop");
+      };
+    })(this));
   };
 
   RecordTooltip.prototype.sendBlob = function() {
-    return this.microm.getMp3().then((function(_this) {
+    this.microm.getMp3().then((function(_this) {
       return function(mp3) {
         return _this.quill.emit("record_data", mp3.blob);
       };
     })(this));
+    return this.hide();
   };
 
   RecordTooltip.prototype.play = function() {

@@ -51,19 +51,20 @@ class RecordTooltip extends Tooltip
       @startRecording()
 
   startRecording: ()->
-    @microm.record().then () ->
+    @microm.record().then () =>
       @quill.emit "record_voice","record start"
-    .catch () ->
+    .catch () =>
       @quill.emit "record_voice","record error"
 
 
   stopRecording: ()->
-    @microm.stop().then (voice) ->
+    @microm.stop().then (voice) =>
       @quill.emit "record_voice","record stop"
 
   sendBlob: ()->
     @microm.getMp3().then (mp3) =>
       @quill.emit "record_data",mp3.blob
+    this.hide()
 
   play: ()->
     @microm.play()

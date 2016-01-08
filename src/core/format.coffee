@@ -70,6 +70,14 @@ class Format
         node.setAttribute('frameborder', '0')
         return node
 
+    record:
+      type: Format.types.EMBED
+      tag: 'IFRAME'
+      add: (node, value) ->
+        node.setAttribute('src', value)
+        node.setAttribute('frameborder', '0')
+        return node
+
     align:
       type: Format.types.LINE
       style: 'textAlign'

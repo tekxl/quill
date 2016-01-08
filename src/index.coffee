@@ -1,6 +1,7 @@
 require('./modules/authorship')
 require('./modules/image-tooltip')
 require('./modules/media-tooltip')
+require('./modules/record-tooltip')
 require('./modules/keyboard')
 require('./modules/link-tooltip')
 require('./modules/multi-cursor')

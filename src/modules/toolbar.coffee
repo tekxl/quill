@@ -10,8 +10,8 @@ class Toolbar
   @formats:
     LINE    : { 'align', 'bullet', 'list' }
     SELECT  : { 'align', 'background', 'color', 'font', 'size' }
-    TOGGLE  : { 'bold', 'bullet', 'image', 'italic', 'link', 'list', 'strike', 'underline', 'media' }
-    TOOLTIP : { 'image', 'link', 'media' }
+    TOGGLE  : { 'bold', 'bullet', 'image', 'italic', 'link', 'list', 'strike', 'underline', 'media', 'record' }
+    TOOLTIP : { 'image', 'link', 'media', 'record' }
 
   constructor: (@quill, @options) ->
     @options = { container: @options } if _.isString(@options) or _.isElement(@options)

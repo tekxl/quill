@@ -33678,7 +33678,7 @@ RecordTooltip = (function(superClass) {
   extend(RecordTooltip, superClass);
 
   RecordTooltip.DEFAULTS = {
-    template: '<div class="preview"> <a class="audio-containers" href="#"> event </a> <span>Preview</span> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="play">Play</a> <a href="javascript:;" class="insert">Insert</a>'
+    template: '<div class="preview"> <div class="audio-containers"> event </div> <span>Preview</span> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="play">Play</a> <a href="javascript:;" class="insert">Insert</a>'
   };
 
   function RecordTooltip(quill, options) {

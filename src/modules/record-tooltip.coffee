@@ -12,9 +12,9 @@ class RecordTooltip extends Tooltip
     template:
      '
       <div class="preview">
-        <a class="audio-containers" href="#">
+        <div class="audio-containers">
           event
-        </a>
+        </div>
         <span>Preview</span>
       </div>
       <a href="javascript:;" class="cancel">Cancel</a>

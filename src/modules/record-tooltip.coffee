@@ -51,16 +51,15 @@ class RecordTooltip extends Tooltip
       @startRecording()
 
   startRecording: ()->
-    console.log 'recording step 3'
     @microm.record().then () ->
-      console.log 'recording ...'
+      @quill.emit "record_voice","record start"
     .catch () ->
-      console.log 'error recording'
+      @quill.emit "record_voice","record error"
 
 
   stopRecording: ()->
     @microm.stop().then (voice) ->
-      console.log 'darex',voice
+      @quill.emit "record_voice","record stop"
 
   sendBlob: ()->
     @microm.getMp3().then (mp3) =>

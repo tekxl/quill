@@ -33718,17 +33718,16 @@ RecordTooltip = (function(superClass) {
   };
 
   RecordTooltip.prototype.startRecording = function() {
-    console.log('recording step 3');
     return this.microm.record().then(function() {
-      return console.log('recording ...');
+      return this.quill.emit("record_voice", "record start");
     })["catch"](function() {
-      return console.log('error recording');
+      return this.quill.emit("record_voice", "record error");
     });
   };
 
   RecordTooltip.prototype.stopRecording = function() {
     return this.microm.stop().then(function(voice) {
-      return console.log('darex', voice);
+      return this.quill.emit("record_voice", "record stop");
     });
   };
 

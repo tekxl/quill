@@ -79,8 +79,5 @@
     "editor",
     "rich text",
     "wysiwyg"
-  ],
-  "dependencies": {
-    "msr": "^1.2.9"
-  }
+  ]
 }

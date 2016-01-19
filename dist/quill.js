@@ -33679,7 +33679,7 @@ RecordTooltip = (function(superClass) {
   extend(RecordTooltip, superClass);
 
   RecordTooltip.DEFAULTS = {
-    template: '<div  class="record-tooltip-player"> <div class="record-tooltip-player-controls"> <div class="record-tooltip-player-micro"> <span class="record-tooltip-player-microphone"></span> <i class="fa fa-microphone-slash record-micro"></i> </div> <span class="record-tooltip-player-record"> <a role="button" class="record-play fa fa-play"></a> <a role="button" class="record-delete fa fa-remove"></a> </span> <div class="record-time-counter">00:00:00</div> </div> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="insert">Insert</a>'
+    template: '<div  class="record-tooltip-player"> <div class="record-tooltip-player-controls"> <div class="record-tooltip-player-micro"> <a role="button" class="record-play fa fa-play"></a> <i class="fa fa-microphone-slash record-micro"></i> <a role="button" class="record-delete fa fa-remove"></a> </div> <div class="record-time-counter">00:00:00</div> </div> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="insert">Insert</a>'
   };
 
   function RecordTooltip(quill, options) {
@@ -33774,11 +33774,11 @@ RecordTooltip = (function(superClass) {
   };
 
   RecordTooltip.prototype.start = function() {
-    if (dom(this.container.querySelector('.record-tooltip-player-micro')).hasClass('start-animation')) {
-      dom(this.container.querySelector('.record-tooltip-player-micro')).removeClass('start-animation');
+    if (dom(this.container.querySelector('.record-micro')).hasClass('start-animation')) {
+      dom(this.container.querySelector('.record-micro')).removeClass('start-animation');
       return this.stopRecording();
     } else {
-      dom(this.container.querySelector('.record-tooltip-player-micro')).addClass('start-animation');
+      dom(this.container.querySelector('.record-micro')).addClass('start-animation');
       return this.startRecording();
     }
   };

@@ -14,13 +14,10 @@ class RecordTooltip extends Tooltip
       <div  class="record-tooltip-player">
         <div class="record-tooltip-player-controls">
           <div class="record-tooltip-player-micro">
-            <span class="record-tooltip-player-microphone"></span>
-            <i class="fa fa-microphone-slash record-micro"></i>
-          </div>
-          <span class="record-tooltip-player-record">
             <a role="button" class="record-play fa fa-play"></a>
+            <i class="fa fa-microphone-slash record-micro"></i>
             <a role="button" class="record-delete fa fa-remove"></a>
-          </span>
+          </div>
           <div class="record-time-counter">00:00:00</div>
         </div>
       </div>
@@ -90,11 +87,11 @@ class RecordTooltip extends Tooltip
     setTimeout(@updateCurrentTime, 1000) if @is_record
 
   start: ()->
-    if dom(@container.querySelector('.record-tooltip-player-micro')).hasClass('start-animation')
-      dom(@container.querySelector('.record-tooltip-player-micro')).removeClass('start-animation')
+    if dom(@container.querySelector('.record-micro')).hasClass('start-animation')
+      dom(@container.querySelector('.record-micro')).removeClass('start-animation')
       @stopRecording()
     else
-      dom(@container.querySelector('.record-tooltip-player-micro')).addClass('start-animation')
+      dom(@container.querySelector('.record-micro')).addClass('start-animation')
       @startRecording()
 
   delete: ()->

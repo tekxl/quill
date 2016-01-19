@@ -89,9 +89,13 @@ class RecordTooltip extends Tooltip
   start: ()->
     if dom(@container.querySelector('.record-micro')).hasClass('start-animation')
       dom(@container.querySelector('.record-micro')).removeClass('start-animation')
+      @container.querySelector('.record-play').style.display = "inline"
+      @container.querySelector('.record-delete').style.display = "inline"
       @stopRecording()
     else
       dom(@container.querySelector('.record-micro')).addClass('start-animation')
+      @container.querySelector('.record-play').style.display = "none"
+      @container.querySelector('.record-delete').style.display = "none"
       @startRecording()
 
   delete: ()->

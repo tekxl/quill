@@ -33776,9 +33776,13 @@ RecordTooltip = (function(superClass) {
   RecordTooltip.prototype.start = function() {
     if (dom(this.container.querySelector('.record-micro')).hasClass('start-animation')) {
       dom(this.container.querySelector('.record-micro')).removeClass('start-animation');
+      this.container.querySelector('.record-play').style.display = "inline";
+      this.container.querySelector('.record-delete').style.display = "inline";
       return this.stopRecording();
     } else {
       dom(this.container.querySelector('.record-micro')).addClass('start-animation');
+      this.container.querySelector('.record-play').style.display = "none";
+      this.container.querySelector('.record-delete').style.display = "none";
       return this.startRecording();
     }
   };

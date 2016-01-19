@@ -33657,6 +33657,7 @@ module.exports = PasteManager;
 
 },{"../core/document":9,"../quill":33}],29:[function(_dereq_,module,exports){
 var Delta, Microm, Quill, Range, RecordTooltip, Tooltip, _, dom,
+  bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
@@ -33678,16 +33679,18 @@ RecordTooltip = (function(superClass) {
   extend(RecordTooltip, superClass);
 
   RecordTooltip.DEFAULTS = {
-    template: '<div class="preview"> <div class="audio-containers"> event </div> <span>Preview</span> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="play">Play</a> <a href="javascript:;" class="insert">Insert</a>'
+    template: '<div  class="record-tooltip-player"> <div class="record-tooltip-player-controls"> <div class="record-tooltip-player-micro"> <span class="record-tooltip-player-microphone"></span> <i class="fa fa-microphone-slash record-micro"></i> </div> <span class="record-tooltip-player-record"> <a role="button" class="record-play fa fa-play"></a> <a role="button" class="record-delete fa fa-remove"></a> </span> <div class="record-time-counter">00:00:00</div> </div> </div> <a href="javascript:;" class="cancel">Cancel</a> <a href="javascript:;" class="insert">Insert</a>'
   };
 
   function RecordTooltip(quill, options) {
     this.quill = quill;
     this.options = options;
+    this.updateCurrentTime = bind(this.updateCurrentTime, this);
     this.options = _.defaults(this.options, Tooltip.DEFAULTS);
     RecordTooltip.__super__.constructor.call(this, this.quill, this.options);
-    this.preview = this.container.querySelector('.preview');
-    this.audio = this.container.querySelector('.audio-containers');
+    this.timer = this.container.querySelector('.record-time-counter');
+    this.is_record = false;
+    console.log('constructor', this.timer);
     dom(this.container).addClass('ql-record-tooltip');
     if (!this.microm) {
       this.microm = new Microm;
@@ -33698,8 +33701,9 @@ RecordTooltip = (function(superClass) {
   RecordTooltip.prototype.initListeners = function() {
     dom(this.container.querySelector('.insert')).on('click', _.bind(this.sendBlob, this));
     dom(this.container.querySelector('.cancel')).on('click', _.bind(this.hide, this));
-    dom(this.audio).on('click', _.bind(this.recordingEvent, this));
-    dom(this.container.querySelector('.play')).on('click', _.bind(this.play, this));
+    dom(this.container.querySelector('.record-play')).on('click', _.bind(this.play, this));
+    dom(this.container.querySelector('.record-delete')).on('click', _.bind(this["delete"], this));
+    dom(this.container.querySelector('.record-micro')).on('click', _.bind(this.start, this));
     return this.quill.onModuleLoad('toolbar', (function(_this) {
       return function(toolbar) {
         return toolbar.initFormat('record', _.bind(_this._onToolbar, _this));
@@ -33707,20 +33711,13 @@ RecordTooltip = (function(superClass) {
     })(this));
   };
 
-  RecordTooltip.prototype.recordingEvent = function() {
-    if (dom(this.audio).hasClass('start-recording')) {
-      dom(this.audio).removeClass('start-recording');
-      return this.stopRecording();
-    } else {
-      dom(this.audio).addClass('start-recording');
-      return this.startRecording();
-    }
-  };
-
   RecordTooltip.prototype.startRecording = function() {
     return this.microm.record().then((function(_this) {
       return function() {
-        return _this.quill.emit("record_voice", "record start");
+        _this.is_record = true;
+        console.log(_this.microm);
+        _this.quill.emit("record_voice", "record start");
+        return setTimeout(_this.updateCurrentTime, 1000);
       };
     })(this))["catch"]((function(_this) {
       return function() {
@@ -33730,6 +33727,7 @@ RecordTooltip = (function(superClass) {
   };
 
   RecordTooltip.prototype.stopRecording = function() {
+    this.is_record = false;
     return this.microm.stop().then((function(_this) {
       return function(voice) {
         return _this.quill.emit("record_voice", "record stop");
@@ -33747,7 +33745,53 @@ RecordTooltip = (function(superClass) {
   };
 
   RecordTooltip.prototype.play = function() {
-    return this.microm.play();
+    if (this.microm.player) {
+      return this.microm.play();
+    }
+  };
+
+  RecordTooltip.prototype.hide = function() {
+    this.resetTimer();
+    return RecordTooltip.__super__.hide.apply(this, arguments);
+  };
+
+  RecordTooltip.prototype.updateCurrentTime = function() {
+    var dt, dt2, myTime, ss, ts;
+    if (this.is_record) {
+      myTime = this.timer.innerText;
+      ss = myTime.split(":");
+      dt = new Date();
+      dt.setHours(ss[0]);
+      dt.setMinutes(ss[1]);
+      dt.setSeconds(ss[2]);
+      dt2 = new Date(dt.valueOf() + 1000);
+      ts = dt2.toTimeString().split(" ")[0];
+      this.timer.innerText = ts;
+    }
+    if (this.is_record) {
+      return setTimeout(this.updateCurrentTime, 1000);
+    }
+  };
+
+  RecordTooltip.prototype.start = function() {
+    if (dom(this.container.querySelector('.record-tooltip-player-micro')).hasClass('start-animation')) {
+      dom(this.container.querySelector('.record-tooltip-player-micro')).removeClass('start-animation');
+      return this.stopRecording();
+    } else {
+      dom(this.container.querySelector('.record-tooltip-player-micro')).addClass('start-animation');
+      return this.startRecording();
+    }
+  };
+
+  RecordTooltip.prototype["delete"] = function() {
+    this.microm = new Microm;
+    return this.resetTimer();
+  };
+
+  RecordTooltip.prototype.resetTimer = function() {
+    if (this.timer) {
+      return this.timer.innerText = "00:00:00";
+    }
   };
 
   RecordTooltip.prototype._onToolbar = function(range, value) {

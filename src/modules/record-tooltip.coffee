@@ -11,23 +11,29 @@ class RecordTooltip extends Tooltip
   @DEFAULTS:
     template:
      '
-      <div class="preview">
-        <div class="audio-containers">
-          event
+      <div  class="record-tooltip-player">
+        <div class="record-tooltip-player-controls">
+          <div class="record-tooltip-player-micro">
+            <span class="record-tooltip-player-microphone"></span>
+            <i class="fa fa-microphone-slash record-micro"></i>
+          </div>
+          <span class="record-tooltip-player-record">
+            <a role="button" class="record-play fa fa-play"></a>
+            <a role="button" class="record-delete fa fa-remove"></a>
+          </span>
+          <div class="record-time-counter">00:00:00</div>
         </div>
-        <span>Preview</span>
       </div>
       <a href="javascript:;" class="cancel">Cancel</a>
-      <a href="javascript:;" class="play">Play</a>
       <a href="javascript:;" class="insert">Insert</a>'
 
   constructor: (@quill, @options) ->
     @options = _.defaults(@options, Tooltip.DEFAULTS)
     super(@quill, @options)
-    @preview = @container.querySelector('.preview')
-    @audio = @container.querySelector('.audio-containers')
+    @timer = @container.querySelector('.record-time-counter')
+    @is_record = false
+    console.log 'constructor',@timer
     dom(@container).addClass('ql-record-tooltip')
-    #@microm = new Microm
     unless @microm
       @microm = new Microm
     this.initListeners()
@@ -35,29 +41,25 @@ class RecordTooltip extends Tooltip
   initListeners: ->
     dom(@container.querySelector('.insert')).on('click', _.bind(this.sendBlob, this))
     dom(@container.querySelector('.cancel')).on('click', _.bind(this.hide, this))
-    dom(@audio).on('click', _.bind(this.recordingEvent, this))
-    dom(@container.querySelector('.play')).on('click', _.bind(this.play, this))
+    dom(@container.querySelector('.record-play')).on('click', _.bind(this.play, this))
+    dom(@container.querySelector('.record-delete')).on('click', _.bind(this.delete, this))
+    dom(@container.querySelector('.record-micro')).on('click', _.bind(this.start, this))
     @quill.onModuleLoad('toolbar', (toolbar) =>
       toolbar.initFormat('record', _.bind(this._onToolbar, this))
     )
 
-
-  recordingEvent: ->
-    if dom(@audio).hasClass('start-recording')
-      dom(@audio).removeClass('start-recording')
-      @stopRecording()
-    else
-      dom(@audio).addClass('start-recording')
-      @startRecording()
-
   startRecording: ()->
     @microm.record().then () =>
+      @is_record = true
+      console.log @microm
       @quill.emit "record_voice","record start"
+      setTimeout(@updateCurrentTime, 1000);
     .catch () =>
       @quill.emit "record_voice","record error"
 
 
   stopRecording: ()->
+    @is_record = false
     @microm.stop().then (voice) =>
       @quill.emit "record_voice","record stop"
 
@@ -67,7 +69,40 @@ class RecordTooltip extends Tooltip
     this.hide()
 
   play: ()->
-    @microm.play()
+    @microm.play() if @microm.player
+
+  hide: ()->
+    @resetTimer()
+    super
+
+  updateCurrentTime: ()=>
+    if @is_record
+      myTime = @timer.innerText
+      ss = myTime.split(":")
+      dt = new Date()
+      dt.setHours(ss[0])
+      dt.setMinutes(ss[1])
+      dt.setSeconds(ss[2])
+
+      dt2 = new Date(dt.valueOf() + 1000)
+      ts = dt2.toTimeString().split(" ")[0]
+      @timer.innerText = ts
+    setTimeout(@updateCurrentTime, 1000) if @is_record
+
+  start: ()->
+    if dom(@container.querySelector('.record-tooltip-player-micro')).hasClass('start-animation')
+      dom(@container.querySelector('.record-tooltip-player-micro')).removeClass('start-animation')
+      @stopRecording()
+    else
+      dom(@container.querySelector('.record-tooltip-player-micro')).addClass('start-animation')
+      @startRecording()
+
+  delete: ()->
+    @microm = new Microm
+    @resetTimer()
+
+  resetTimer: ()->
+    @timer.innerText = "00:00:00" if @timer
 
 
   _onToolbar: (range, value) ->

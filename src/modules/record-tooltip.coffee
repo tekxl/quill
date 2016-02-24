@@ -17,7 +17,7 @@ class RecordTooltip extends Tooltip
             <i class="fa fa-microphone-slash record-micro"></i>
           </div>
           <div class="box">
-  					<input type="file" name="file-5[]" id="file-5" class="inputfile inputfile-4" data-multiple-caption="{count} files selected" accept="audio/*" />
+  					<input type="file" name="file-5[]" id="file-5" class="inputfile inputfile-4" data-multiple-caption="{count} files selected" accept="audio/*"/>
   					<label for="file-5">
               <figure>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17">
@@ -26,12 +26,12 @@ class RecordTooltip extends Tooltip
               </figure>
             </label>
   				</div>
+        </div>
           <div class="record-controls">
             <a role="button" class="record-play fa fa-play"></a>
             <a role="button" class="record-delete fa fa-remove"></a>
           </div>
           <div class="record-time-counter">00:00:00</div>
-        </div>
       </div>
       <a href="javascript:;" class="cancel">Cancel</a>
       <a href="javascript:;" class="insert">Insert</a>'
@@ -76,10 +76,11 @@ class RecordTooltip extends Tooltip
   sendBlob: ()->
     @microm.getMp3().then (mp3) =>
       dom(@container.querySelector('.record-tooltip-player')).addClass('record-data-sending')
-      #@quill.emit "record_data",mp3.blob
-      #this.hide()
-      @registerData mp3.blob,"mp3"
+      data = {audio: mp3.blob, type: "wav"}
+      @quill.emit "record_data",data
       this.hide()
+      #@registerData mp3.blob,"mp3"
+      #this.hide()
 
   # registerData: (blob,type) ->
   #   key = @generateKey()
@@ -187,13 +188,14 @@ class RecordTooltip extends Tooltip
     for input in inputs
       label	 = input.nextElementSibling
       labelVal = label.innerHTML
-      input.addEventListener 'change', ( e )->
-        fileName = ''
-        fileName = e.target.value.split( '\\' ).pop()
-        #if fileName
-          #label.querySelector( 'span' ).innerHTML = fileName
-        #else
-          #label.innerHTML = labelVal
+      input.addEventListener 'change', ( e )=>
+        reader = new FileReader()
+        reader.onload = ()=>
+          rawData = reader.result
+          fileName = e.target.value.split( '\\' ).pop()
+          data = {audio: rawData, type: filename.split('.').pop()}
+          @quill.emit "record_data",data
+        reader.readAsBinaryString(e.target.files[0])
 
       input.addEventListener 'focus', ( e )->
         input.classList.add( 'has-focus' )

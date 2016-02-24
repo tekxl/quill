@@ -33740,7 +33740,7 @@ RecordTooltip = (function(superClass) {
     var data;
     if (this.rawData) {
       data = {
-        audio: rawData,
+        audio: this.rawData,
         type: "mp3"
       };
       return this.quill.emit("record_data", data);

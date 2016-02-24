@@ -75,7 +75,7 @@ class RecordTooltip extends Tooltip
 
   sendBlob: ()->
     if @rawData
-      data = {audio: rawData, type: "mp3"}
+      data = {audio: @rawData, type: "mp3"}
       @quill.emit "record_data",data
     else
       @microm.getMp3().then (mp3) =>

@@ -82,43 +82,8 @@ class RecordTooltip extends Tooltip
         dom(@container.querySelector('.record-tooltip-player')).addClass('record-data-sending')
         data = {audio: mp3.blob, type: "wav"}
         @quill.emit "record_data",data
-        this.hide()
-      #@registerData mp3.blob,"mp3"
-      #this.hide()
+    this.hide()
 
-  # registerData: (blob,type) ->
-  #   key = @generateKey()
-  #   key_mp3 =  key+ '.'+type
-  #   data =
-  #     'filename': key_mp3,
-  #     'filetype':'audio/'+type
-  #   xhr_ = new XMLHttpRequest()
-  #   xhr_.open 'PUT', @url
-  #   xhr_.setRequestHeader 'Content-Type', 'application/json'
-  #   xhr_.onreadystatechange = (aEvt) =>
-  #     if xhr_.readyState == 4
-  #       if xhr_.status == 200
-  #         @uploadWithUrl blob,data.presigned_url,data.public_url,type
-  #       else
-  #         @quill.emit "record_data_register","error"
-  #   xhr_.send data
-  #
-  # uploadWithUrl: (file,presignedUrl, publicUrl,type) ->
-  #   # create PUT request to S3
-  #   xhr = new XMLHttpRequest()
-  #   xhr.open 'PUT', presignedUrl
-  #   xhr.setRequestHeader 'Content-Type', 'audio/'+type
-  #   xhr.onreadystatechange = (aEvt) =>
-  #     if xhr.readyState == 4
-  #       if xhr.status == 200
-  #         if type is "mp3"
-  #           @registerData mp3.blob,"ogg"
-  #         else
-  #           @quill.emit "record_data_register",publicUrl
-  #        else
-  #         @quill.emit "record_data_register","error"
-  #   xhr.send file
-  #   return
 
   moduleResult: (message)->
     dom(@container.querySelector('.record-tooltip-player')).removeClass('record-data-sending')
@@ -193,11 +158,11 @@ class RecordTooltip extends Tooltip
       label	 = input.nextElementSibling
       labelVal = label.innerHTML
       input.addEventListener 'change', ( e )=>
-        reader = new FileReader()
-        reader.onload = ()=>
-          @rawData = reader.result
+        #reader = new FileReader()
+        #reader.onload = ()=>
+        @rawData = e.target.files[0]
 
-        reader.readAsBinaryString(e.target.files[0])
+        #reader.readAsBinaryString(e.target.files[0])
 
       input.addEventListener 'focus', ( e )->
         input.classList.add( 'has-focus' )

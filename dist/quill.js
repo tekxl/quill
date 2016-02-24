@@ -33743,20 +33743,20 @@ RecordTooltip = (function(superClass) {
         audio: this.rawData,
         type: "mp3"
       };
-      return this.quill.emit("record_data", data);
+      this.quill.emit("record_data", data);
     } else {
-      return this.microm.getMp3().then((function(_this) {
+      this.microm.getMp3().then((function(_this) {
         return function(mp3) {
           dom(_this.container.querySelector('.record-tooltip-player')).addClass('record-data-sending');
           data = {
             audio: mp3.blob,
             type: "wav"
           };
-          _this.quill.emit("record_data", data);
-          return _this.hide();
+          return _this.quill.emit("record_data", data);
         };
       })(this));
     }
+    return this.hide();
   };
 
   RecordTooltip.prototype.moduleResult = function(message) {
@@ -33857,12 +33857,7 @@ RecordTooltip = (function(superClass) {
       labelVal = label.innerHTML;
       input.addEventListener('change', (function(_this) {
         return function(e) {
-          var reader;
-          reader = new FileReader();
-          reader.onload = function() {
-            return _this.rawData = reader.result;
-          };
-          return reader.readAsBinaryString(e.target.files[0]);
+          return _this.rawData = e.target.files[0];
         };
       })(this));
       input.addEventListener('focus', function(e) {

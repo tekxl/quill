@@ -74,11 +74,15 @@ class RecordTooltip extends Tooltip
       @quill.emit "record_voice","record stop"
 
   sendBlob: ()->
-    @microm.getMp3().then (mp3) =>
-      dom(@container.querySelector('.record-tooltip-player')).addClass('record-data-sending')
-      data = {audio: mp3.blob, type: "wav"}
-      @quill.emit "record_data",mp3.blob
-      this.hide()
+    if @rawData
+      data = {audio: rawData, type: "mp3"}
+      @quill.emit "record_data",data
+    else
+      @microm.getMp3().then (mp3) =>
+        dom(@container.querySelector('.record-tooltip-player')).addClass('record-data-sending')
+        data = {audio: mp3.blob, type: "wav"}
+        @quill.emit "record_data",data
+        this.hide()
       #@registerData mp3.blob,"mp3"
       #this.hide()
 
@@ -191,10 +195,8 @@ class RecordTooltip extends Tooltip
       input.addEventListener 'change', ( e )=>
         reader = new FileReader()
         reader.onload = ()=>
-          rawData = reader.result
-          fileName = e.target.value.split( '\\' ).pop()
-          data = {audio: rawData, type: filename.split('.').pop()}
-          @quill.emit "record_data",data
+          @rawData = reader.result
+
         reader.readAsBinaryString(e.target.files[0])
 
       input.addEventListener 'focus', ( e )->

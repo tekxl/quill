@@ -33737,18 +33737,26 @@ RecordTooltip = (function(superClass) {
   };
 
   RecordTooltip.prototype.sendBlob = function() {
-    return this.microm.getMp3().then((function(_this) {
-      return function(mp3) {
-        var data;
-        dom(_this.container.querySelector('.record-tooltip-player')).addClass('record-data-sending');
-        data = {
-          audio: mp3.blob,
-          type: "wav"
-        };
-        _this.quill.emit("record_data", mp3.blob);
-        return _this.hide();
+    var data;
+    if (this.rawData) {
+      data = {
+        audio: rawData,
+        type: "mp3"
       };
-    })(this));
+      return this.quill.emit("record_data", data);
+    } else {
+      return this.microm.getMp3().then((function(_this) {
+        return function(mp3) {
+          dom(_this.container.querySelector('.record-tooltip-player')).addClass('record-data-sending');
+          data = {
+            audio: mp3.blob,
+            type: "wav"
+          };
+          _this.quill.emit("record_data", data);
+          return _this.hide();
+        };
+      })(this));
+    }
   };
 
   RecordTooltip.prototype.moduleResult = function(message) {
@@ -33852,14 +33860,7 @@ RecordTooltip = (function(superClass) {
           var reader;
           reader = new FileReader();
           reader.onload = function() {
-            var data, fileName, rawData;
-            rawData = reader.result;
-            fileName = e.target.value.split('\\').pop();
-            data = {
-              audio: rawData,
-              type: filename.split('.').pop()
-            };
-            return _this.quill.emit("record_data", data);
+            return _this.rawData = reader.result;
           };
           return reader.readAsBinaryString(e.target.files[0]);
         };

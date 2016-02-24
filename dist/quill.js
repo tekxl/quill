@@ -33745,7 +33745,7 @@ RecordTooltip = (function(superClass) {
           audio: mp3.blob,
           type: "wav"
         };
-        _this.quill.emit("record_data", data);
+        _this.quill.emit("record_data", mp3.blob);
         return _this.hide();
       };
     })(this));

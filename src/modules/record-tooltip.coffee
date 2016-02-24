@@ -77,7 +77,7 @@ class RecordTooltip extends Tooltip
     @microm.getMp3().then (mp3) =>
       dom(@container.querySelector('.record-tooltip-player')).addClass('record-data-sending')
       data = {audio: mp3.blob, type: "wav"}
-      @quill.emit "record_data",data
+      @quill.emit "record_data",mp3.blob
       this.hide()
       #@registerData mp3.blob,"mp3"
       #this.hide()
